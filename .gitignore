@@ -1,0 +1,12 @@
+# Nix build outputs
+result
+result-*
+
+# NixOS test driver state
+.nixos-test-history
+*.qcow2
+
+# The vendor installer and account secrets never belong in the repo
+*.run
+*.run.asc
+*activation-code*
