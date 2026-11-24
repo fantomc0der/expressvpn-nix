@@ -8,21 +8,26 @@
 let
   cfg = config.programs.expressvpn;
 
-  # Where the app keeps its state. The path is compiled into the binaries.
-  stateDir = "/opt/expressvpn";
+  # The app's install prefix, compiled into its binaries. It holds links to
+  # the package plus the app's writable state.
+  prefix = "/opt/expressvpn";
 
   ctl = "${cfg.package}/bin/expressvpnctl";
 
-  # Programs the daemon shells out to. It runs every command through
-  # /bin/bash, and some of them with PATH fixed to the usual FHS directories,
-  # so the service also gets this set mounted at /bin and /usr/bin.
+  # Programs the daemon and its helper scripts shell out to. The daemon runs
+  # every command through /bin/bash, some of them with PATH fixed to the
+  # usual FHS directories, so the service gets this set mounted at /bin and
+  # /usr/bin.
   daemonTools = pkgs.buildEnv {
     name = "expressvpn-daemon-tools";
     paths = [
       pkgs.bash
       pkgs.coreutils
+      pkgs.e2fsprogs
+      pkgs.findutils
       pkgs.gawk
       pkgs.gnugrep
+      pkgs.gnused
       pkgs.iproute2
       pkgs.iptables
       pkgs.kmod
@@ -92,23 +97,39 @@ in
 
     boot.kernelModules = [ "tun" ];
 
+    # The daemon routes with firewall marks, which the strict reverse-path
+    # check does not follow: it sees the VPN server's replies arrive on the
+    # physical interface, expects them on the tunnel, and drops them.
+    networking.firewall.checkReversePath = lib.mkDefault "loose";
+
     # Leave the app's WireGuard interface alone, as the vendor installer does.
     networking.networkmanager.unmanaged = [ "interface-name:wgexpressvpn*" ];
 
     systemd = {
       tmpfiles.rules = [
-        "d ${stateDir} 0755 root root -"
-        "d ${stateDir}/etc 0755 root root -"
-        "d ${stateDir}/var 0755 root root -"
+        "d ${prefix} 0755 root root -"
+        "d ${prefix}/etc 0755 root root -"
+        "d ${prefix}/var 0755 root root -"
+      ]
+      ++ map (dir: "L+ ${prefix}/${dir} - - - - ${cfg.package}${prefix}/${dir}") [
+        "bin"
+        "lib"
+        "plugins"
+        "qml"
+        "share"
       ];
 
       services.expressvpn-service = {
         description = "ExpressVPN daemon";
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
-        path = [ daemonTools ];
+        # The daemon hands its PATH to OpenVPN's up/down script as command-line
+        # words, and OpenVPN drops everything after the 16th word. The usual
+        # NixOS service PATH is long enough to push the script's own arguments
+        # off the end, so use the two mounted directories instead.
+        environment.PATH = lib.mkForce "/usr/bin:/bin";
         serviceConfig = {
-          ExecStart = "${cfg.package}/opt/expressvpn/bin/expressvpn-daemon";
+          ExecStart = "${cfg.package}${prefix}/bin/expressvpn-daemon";
           Restart = "always";
           BindReadOnlyPaths = [
             "${daemonTools}/bin:/bin"

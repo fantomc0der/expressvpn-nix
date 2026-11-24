@@ -40,9 +40,9 @@ let
     .${stdenv.hostPlatform.system}
       or (throw "expressvpn: unsupported system ${stdenv.hostPlatform.system}");
 
-  # The vendor layout is kept under $out/opt/expressvpn. The binaries find
-  # their own files relative to themselves, but keep their state in
-  # /opt/expressvpn/etc and /opt/expressvpn/var, which the NixOS module creates.
+  # The app expects to live in /opt/expressvpn. The vendor layout is kept
+  # under $out/opt/expressvpn, and the NixOS module links it into place next
+  # to the writable etc and var directories.
   prefix = "/opt/expressvpn";
 
   redirectLib = "${libredirect}/lib/libredirect.so";
@@ -161,14 +161,21 @@ stdenv.mkDerivation {
     mkdir -p "$app"
     cp -r "$payload/expressvpnfiles/." "$app/"
 
-    # Qt would otherwise look for its plugins under /opt/expressvpn.
-    substituteInPlace "$app/bin/qt.conf" --replace-fail "${prefix}" "$app"
+    # OpenVPN runs this script with an empty environment, and the script uses
+    # external commands before it sets PATH from its arguments. Elsewhere bash
+    # falls back to a built-in PATH; bash from nixpkgs has none, so add the
+    # directories the daemon's service provides.
+    updown=$app/bin/openvpn-updown.sh
+    if ! head -n 1 "$updown" | grep -q '^#!/bin/bash'; then
+      echo "$updown is no longer a bash script; review the PATH fix" >&2
+      exit 1
+    fi
+    sed -i '1a PATH="''${PATH:+$PATH:}/usr/bin:/bin"' "$updown"
 
     # The installer's helper scripts: keep the OpenGL error dialog, drop the
     # updater and uninstaller, which only make sense on a mutable system.
     install -m755 "$payload/installfiles/error-notice.sh" "$app/bin/error-notice.sh"
     substituteInPlace "$app/bin/error-notice.sh" \
-      --replace-fail 'installDir="/opt/''${brandPrefixVpn}"' "installDir=\"$app\"" \
       --replace-fail $'PATH="/usr/bin:/usr/sbin:/bin:/sbin"\n' ""
 
     install -Dm644 "$payload/installfiles/app-icon.png" \
@@ -222,9 +229,9 @@ stdenv.mkDerivation {
       The official ExpressVPN app for Linux: the graphical client, the
       `expressvpnctl` command-line tool and the background daemon.
 
-      The app needs its root daemon and writable state under /opt/expressvpn,
-      so this package is only useful together with the NixOS module from the
-      same repository.
+      The app expects to be installed at /opt/expressvpn and needs its root
+      daemon, so this package is only useful together with the NixOS module
+      from the same repository.
     '';
     homepage = "https://www.expressvpn.com";
     downloadPage = "https://www.expressvpn.com/latest#linux";
