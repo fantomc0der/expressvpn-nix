@@ -40,9 +40,10 @@ jobs:
 
             Before merging:
 
-            - [ ] Close and reopen this pull request so CI runs on it (GitHub
-                  does not start workflows for pull requests opened by its own
-                  token).
+            - [ ] Start CI: click **Approve and run workflows** below. GitHub
+                  holds workflows on pull requests opened by a workflow until
+                  a maintainer approves them. If there is no such button,
+                  close and reopen this pull request instead.
             - [ ] Run the end-to-end test locally for both DNS setups; CI
                   cannot, because it needs an account:
                   `scripts/e2e-test.sh <code-file>` and

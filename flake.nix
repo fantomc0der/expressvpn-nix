@@ -71,6 +71,7 @@
           packages = [
             pkgs.curl
             pkgs.deadnix
+            pkgs.gh
             pkgs.gnupg
             pkgs.jq
             pkgs.nixfmt-tree

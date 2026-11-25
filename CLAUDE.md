@@ -36,6 +36,20 @@ nix-build -A package --arg pkgs 'import <nixpkgs> { config.allowUnfree = true; }
 nix-build -A tests.basic --arg pkgs 'import <nixpkgs> { config.allowUnfree = true; }'
 ```
 
+## Branches and pull requests
+
+`main` is protected on GitHub: direct pushes are rejected for everyone, and a pull request can only merge once the `checks passed` status check is green. Work on a branch:
+
+```bash
+git switch -c short-description
+git push -u origin short-description
+gh pr create --fill            # gh comes with the dev shell: nix develop
+gh pr checks --watch
+gh pr merge --squash --delete-branch
+```
+
+Do not get around the rule (no bypass, no editing the ruleset to land a change). If CI fails, fix the branch. Details are in `docs/testing.md`.
+
 ## Before committing
 
 - `nix flake check` passes.
@@ -61,4 +75,4 @@ Commit messages are a plain sentence saying what changed, with a body explaining
 - Qt programs store string literals as UTF-16. Use `strings -el` as well as `strings` when looking for paths in the binaries.
 - In the offline test VM the daemon takes about 30 seconds to start and 90 seconds to stop. Neither is a bug in the packaging.
 - Two NixOS test drivers started at the same time block each other. Run end-to-end tests one at a time.
-- CI tests against a named stable NixOS branch in `.github/workflows/ci.yml`. Bump it when a new NixOS release comes out.
+- CI tests against a named stable NixOS branch in `.github/workflows/ci.yml`. Bump it when a new NixOS release comes out. The branch rule requires only the `checks passed` job, so changing the matrix needs no change to the repository settings.

@@ -60,3 +60,17 @@ jobs:
         with:
           name: gui-${{ matrix.nixpkgs.name }}
           path: gui-${{ matrix.nixpkgs.name }}.png
+
+  # The one status check the branch rules require, so the matrix above can
+  # change without touching the repository settings.
+  passed:
+    name: checks passed
+    if: always()
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every flake check succeeded
+        env:
+          RESULT: ${{ needs.check.result }}
+        run: test "$RESULT" = success
