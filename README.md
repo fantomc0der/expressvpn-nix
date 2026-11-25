@@ -21,6 +21,8 @@ What has been verified, in NixOS test VMs against the real ExpressVPN service:
 - **GUI:** starts, signs in, connects and disconnects under X11.
 - **CLI:** `expressvpnctl` login, connect, settings and status.
 
+It has also been installed on one real machine (NixOS 26.05, Hyprland with XWayland): the GUI signed in with an activation code and connected over Lightway UDP, with traffic and DNS going through the tunnel.
+
 Not verified: the browser extension helper, split tunneling in use, and the `aarch64-linux` build. See [Known limitations](#known-limitations).
 
 ## Quick start
