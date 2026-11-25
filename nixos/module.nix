@@ -42,11 +42,12 @@ let
     ignoreCollisions = true;
   };
 
-  # The daemon reads this setting to decide where to look for new versions; an
-  # empty channel turns the check off.
+  # An empty channel stops the daemon looking for new versions. Installing
+  # them from within the app never works on NixOS, so that is always off.
   updateSettings = builtins.toJSON {
     updateChannel = if cfg.checkForUpdates then "release" else "";
     betaUpdateChannel = "";
+    enableAutoUpdate = false;
   };
 
   # The daemon only accepts settings over its socket, which appears a few
@@ -58,7 +59,7 @@ let
       fi
       sleep 1
     done
-    echo "the daemon did not accept the update-check setting" >&2
+    echo "the daemon did not accept the update settings" >&2
     exit 1
   '';
 in
@@ -77,17 +78,28 @@ in
       type = lib.types.bool;
       default = false;
       description = ''
-        Whether the app checks ExpressVPN's servers for new versions and
-        offers to install them.
+        Whether the app checks ExpressVPN's servers for new versions and tells
+        you about them.
 
         The built-in updater downloads and runs the vendor's installer, which
-        cannot work on NixOS, so this is off by default. Update by updating
-        the package instead.
+        cannot work on NixOS, so automatic updates are always turned off and
+        this notice is off by default. Update by updating the package instead.
       '';
     };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = !(config.services.expressvpn.enable or false);
+        message = ''
+          programs.expressvpn (the current ExpressVPN app) and
+          services.expressvpn (the legacy 3.x command-line client from
+          nixpkgs) both manage the system's firewall and DNS. Enable only one.
+        '';
+      }
+    ];
+
     environment.systemPackages = [ cfg.package ];
 
     # The daemon runs its helper processes under these groups and uses them in

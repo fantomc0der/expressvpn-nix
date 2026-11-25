@@ -43,11 +43,17 @@
         machine.wait_until_succeeds("iptables -S | grep -q -- '-N evpn.'")
         machine.wait_until_succeeds("grep -q evpnrt /etc/iproute2/rt_tables")
         machine.succeed("getent group expressvpn expressvpnhnsd")
+        # Empty lists mean the daemon found everything its features need.
+        machine.succeed(
+            "expressvpnctl --unstable dump daemon-state"
+            " | jq -e '.vpnSupportErrors == [] and .splitTunnelSupportErrors == []'"
+        )
 
-    with subtest("the update check is turned off"):
+    with subtest("the in-app updater is turned off"):
         machine.wait_for_unit("expressvpn-settings.service")
         machine.succeed(
-            "expressvpnctl --unstable dump daemon-settings | jq -e '.updateChannel == \"\"'"
+            "expressvpnctl --unstable dump daemon-settings"
+            " | jq -e '.updateChannel == \"\" and .enableAutoUpdate == false'"
         )
 
     with subtest("settings are written to the state directory"):
@@ -63,6 +69,11 @@
         machine.wait_until_succeeds("grep -q 'Client connected, loading UI' /tmp/client.log")
         machine.sleep(5)
         machine.screenshot("gui")
+        # Written by the app on first launch from the packaged desktop entry.
+        machine.succeed(
+            "grep -x 'Exec=env XDG_SESSION_TYPE=X11 expressvpn-client %u'"
+            " /home/alice/.config/autostart/expressvpn-client.desktop"
+        )
 
     with subtest("the desktop entry and browser manifests are installed"):
         machine.succeed("grep -x 'Exec=env XDG_SESSION_TYPE=X11 expressvpn-client %u' /run/current-system/sw/share/applications/expressvpn.desktop")
