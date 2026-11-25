@@ -114,6 +114,8 @@ scripts/update.sh    # move to the latest ExpressVPN release
 scripts/e2e-test.sh <activation-code-file>   # test against the real service
 ```
 
+Changes go to `main` through pull requests, which CI checks. See [docs/testing.md](docs/testing.md#ci-and-pull-requests).
+
 ## License
 
 The packaging code in this repository is under the [MIT license](LICENSE). ExpressVPN is proprietary software under [ExpressVPN's terms of service](https://www.expressvpn.com/tos) and is not distributed here.

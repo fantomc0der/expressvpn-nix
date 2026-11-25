@@ -10,7 +10,7 @@ scripts/e2e-test.sh <code-file>   # real connection, every protocol
 scripts/e2e-test.sh <code-file> resolved
 ```
 
-If all of that passes, commit. The script also updates the version shown in `README.md`.
+If all of that passes, commit on a branch and open a pull request (`main` only takes pull requests; see [testing.md](testing.md#ci-and-pull-requests)). The script also updates the version shown in `README.md`.
 
 ## What `scripts/update.sh` does
 
@@ -24,7 +24,7 @@ It does nothing if `source.json` is already current. Pass a version to pin one (
 
 If the API ever moves, open <https://www.expressvpn.com/latest>, read `API_BASE_URL` from the page source, and update `installers_api` in the script. Passing the version by hand keeps working either way.
 
-The weekly `update` workflow runs this script and opens a pull request when there is a new release. CI cannot run the end-to-end test, so do that locally before merging. GitHub does not start workflows for pull requests opened by its own token: close and reopen the pull request to run CI on it.
+The weekly `update` workflow runs this script and opens a pull request when there is a new release. The workflow then starts CI on that pull request's branch itself, because GitHub does not start workflows for pull requests opened by a workflow's own token. CI cannot run the end-to-end test, so do that locally before merging.
 
 ## When a new release breaks
 

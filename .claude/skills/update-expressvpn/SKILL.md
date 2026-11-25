@@ -9,7 +9,7 @@ A new release is a new closed binary. The version bump itself is one script, but
 
 ## Steps
 
-1. **Start clean.** `git status` should show no changes, so the update is its own commit.
+1. **Start clean, on a branch.** `git status` should show no changes, so the update is its own commit. `main` only takes pull requests, so create a branch first (`git switch -c update-expressvpn`). If you are finishing one of the automated "Update ExpressVPN" pull requests, check out its branch instead and skip step 2.
 
 2. **Run the update script** inside the dev shell:
 
@@ -46,6 +46,8 @@ A new release is a new closed binary. The version bump itself is one script, but
 5. **Look at what changed upstream.** Extract the old and new installers (commands in `docs/updating.md`) and diff `x64/install.sh` and `x64/installfiles/`. New installer steps, new helper binaries or a changed service unit may need mirroring in `nixos/module.nix` even when every test passes.
 
 6. **Commit** `source.json` and `README.md` (plus any fixes) with a message that names both versions, for example "Update ExpressVPN from 14.3.1.15429 to 14.4.0.15601".
+
+7. **Open a pull request** (`git push -u origin <branch>`, then `gh pr create --fill`) and say in it what the end-to-end test covered. Merge once the `checks passed` check is green, asking the user first unless they have already said to merge.
 
 ## If something fails
 
