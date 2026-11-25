@@ -1,0 +1,52 @@
+name: Update
+
+# Checks once a week for a new ExpressVPN release and opens a pull request
+# that moves the package to it.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: cachix/install-nix-action@v32
+
+      # Downloads the installer, verifies its signature against the vendor key
+      # in the repository, and rewrites source.json.
+      - name: Look for a new release
+        id: update
+        run: nix develop --command scripts/update.sh
+
+      - name: Open a pull request
+        if: steps.update.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: update/expressvpn-${{ steps.update.outputs.version }}
+          commit-message: "Update ExpressVPN from ${{ steps.update.outputs.previous }} to ${{ steps.update.outputs.version }}"
+          title: "Update ExpressVPN from ${{ steps.update.outputs.previous }} to ${{ steps.update.outputs.version }}"
+          body: |
+            `scripts/update.sh` found a new ExpressVPN release. The installer's
+            signature was verified against the vendor key in this repository.
+
+            Before merging:
+
+            - [ ] Close and reopen this pull request so CI runs on it (GitHub
+                  does not start workflows for pull requests opened by its own
+                  token).
+            - [ ] Run the end-to-end test locally for both DNS setups; CI
+                  cannot, because it needs an account:
+                  `scripts/e2e-test.sh <code-file>` and
+                  `scripts/e2e-test.sh <code-file> resolved`
+            - [ ] If anything fails, follow "When a new release breaks" in
+                  `docs/updating.md`.
+          labels: update
