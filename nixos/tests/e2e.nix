@@ -13,6 +13,10 @@
 
 { pkgs, ... }:
 
+let
+  # Prints the machine's DNS configuration, which must change while connected.
+  dnsConfig = if useResolved then "resolvectl dns" else "cat /etc/resolv.conf";
+in
 {
   name = "expressvpn-e2e-${if useResolved then "resolved" else "resolvconf"}";
 
@@ -50,7 +54,7 @@
 
     machine.wait_for_unit("expressvpn-settings.service")
     machine.wait_until_succeeds(f"{public_ip} > /tmp/ip-direct", timeout=120)
-    machine.succeed("cat /etc/resolv.conf > /tmp/resolv-direct")
+    machine.succeed("${dnsConfig} > /tmp/dns-direct")
 
     with subtest("log in"):
         # Copied through the driver's shared directory, so the code never
@@ -78,7 +82,8 @@
                     f'ip=$({public_ip}) && test "$ip" != "$(cat /tmp/ip-direct)"', timeout=60
                 )
                 machine.succeed("curl -fsS --max-time 15 -o /dev/null https://www.expressvpn.com")
-                machine.fail("diff -q /etc/resolv.conf /tmp/resolv-direct")
+                machine.succeed("expressvpnctl get dnsconfigured | grep -x true")
+                machine.fail("${dnsConfig} | diff -q - /tmp/dns-direct")
 
             with subtest(f"disconnect from {protocol}"):
                 machine.succeed("expressvpnctl disconnect")
@@ -88,7 +93,7 @@
                 machine.wait_until_succeeds(
                     f'ip=$({public_ip}) && test "$ip" = "$(cat /tmp/ip-direct)"', timeout=60
                 )
-                machine.wait_until_succeeds("diff /etc/resolv.conf /tmp/resolv-direct", timeout=30)
+                machine.wait_until_succeeds("${dnsConfig} | diff - /tmp/dns-direct", timeout=30)
     finally:
         # Best effort, so that a failure above is what gets reported.
         machine.execute("expressvpnctl disconnect")
