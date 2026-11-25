@@ -10,7 +10,7 @@ This is an unofficial packaging effort and is not affiliated with ExpressVPN. Th
 
 | | |
 |---|---|
-| App version | 14.3.0.1 |
+| App version | 14.3.1.15429 |
 | Platforms | `x86_64-linux` tested. `aarch64-linux` is packaged but untested |
 | NixOS | 26.05 and nixos-unstable |
 
