@@ -24,7 +24,7 @@ It does nothing if `source.json` is already current. Pass a version to pin one (
 
 If the API ever moves, open <https://www.expressvpn.com/latest>, read `API_BASE_URL` from the page source, and update `installers_api` in the script. Passing the version by hand keeps working either way.
 
-The weekly `update` workflow runs this script and opens a pull request when there is a new release. The workflow then starts CI on that pull request's branch itself, because GitHub does not start workflows for pull requests opened by a workflow's own token. CI cannot run the end-to-end test, so do that locally before merging.
+The weekly `update` workflow runs this script and opens a pull request when there is a new release. GitHub holds CI on pull requests opened by a workflow until a maintainer approves it: click **Approve and run workflows** on the pull request (details in [testing.md](testing.md#pull-requests-opened-by-the-update-workflow)). CI cannot run the end-to-end test, so do that locally before merging.
 
 ## When a new release breaks
 

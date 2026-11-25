@@ -9,7 +9,7 @@ A new release is a new closed binary. The version bump itself is one script, but
 
 ## Steps
 
-1. **Start clean, on a branch.** `git status` should show no changes, so the update is its own commit. `main` only takes pull requests, so create a branch first (`git switch -c update-expressvpn`). If you are finishing one of the automated "Update ExpressVPN" pull requests, check out its branch instead and skip step 2.
+1. **Start clean, on a branch.** `git status` should show no changes, so the update is its own commit. `main` only takes pull requests, so create a branch first (`git switch -c update-expressvpn`). If you are finishing one of the automated "Update ExpressVPN" pull requests, check out its branch instead and skip step 2. Its CI run waits for a maintainer to approve it; `docs/testing.md` says how.
 
 2. **Run the update script** inside the dev shell:
 

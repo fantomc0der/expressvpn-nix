@@ -69,7 +69,7 @@ The script takes a file path, never the code itself. The test driver copies the 
 
 ## CI and pull requests
 
-`main` only takes pull requests. A repository ruleset ("Protect main") requires a pull request, requires the `checks passed` status check, and blocks force pushes and deletion. It applies to everyone, administrators included. No review is required, so the owner can merge their own pull request once the check is green.
+`main` only takes pull requests. A repository ruleset named `main` requires a pull request, requires the `checks passed` status check, and blocks force pushes and deletion. It applies to everyone, administrators included. No review is required, so the owner can merge their own pull request once the check is green. The repository only allows squash merges, so each pull request becomes one commit on `main`.
 
 The `CI` workflow runs on every pull request and on every push to `main`. It runs `nix flake check` twice, against the pinned nixpkgs and against the current stable NixOS release, and uploads the GUI screenshot from each as an artifact. A final job, `checks passed`, succeeds only if both did. The ruleset requires that one job, so the matrix can change without touching the repository settings.
 
@@ -86,7 +86,20 @@ gh pr merge --squash --delete-branch
 
 CI cannot run the end-to-end test, because that needs an account. Run it locally for changes to the package, the module or the app version.
 
-The `Update` workflow opens its pull requests with the workflow's own token, and GitHub does not start workflows for those. It therefore starts `CI` on the new branch itself. This needs **Settings > Actions > General > Allow GitHub Actions to create and approve pull requests** to be on.
+### Pull requests opened by the Update workflow
+
+The `Update` workflow opens its pull requests with the workflow's own token. This needs **Settings > Actions > General > Allow GitHub Actions to create and approve pull requests** to be on.
+
+GitHub does not run workflows on such a pull request until a maintainer approves them. The `CI` run is created in a waiting state and `checks passed` does not report, so the pull request cannot merge. To start it, click **Approve and run workflows** on the pull request, or:
+
+```bash
+gh run list --branch <branch> --event pull_request     # the run with status "action_required"
+gh api -X POST repos/<owner>/expressvpn-nix/actions/runs/<run-id>/approve
+```
+
+If no run is waiting, closing and reopening the pull request starts CI as well.
+
+Starting `CI` by hand on the branch (`gh workflow run ci.yml --ref <branch>`) does not help. It runs and passes, but its results are not counted for the pull request, which stays blocked. This was tried.
 
 ## Checking the GUI by hand
 
