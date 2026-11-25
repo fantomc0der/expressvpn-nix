@@ -31,7 +31,7 @@ With flakes:
 
 ```nix
 {
-  inputs.expressvpn.url = "github:<owner>/expressvpn-nix";
+  inputs.expressvpn.url = "github:fantomc0der/expressvpn-nix";
 
   outputs = { nixpkgs, expressvpn, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {

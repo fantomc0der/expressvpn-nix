@@ -26,7 +26,7 @@ nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "ex
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    expressvpn.url = "github:<owner>/expressvpn-nix";
+    expressvpn.url = "github:fantomc0der/expressvpn-nix";
   };
 
   outputs = { nixpkgs, expressvpn, ... }: {
