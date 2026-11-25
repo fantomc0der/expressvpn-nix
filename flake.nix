@@ -38,6 +38,25 @@
         pkgs:
         {
           package = self.packages.${pkgs.stdenv.hostPlatform.system}.expressvpn;
+
+          lint =
+            pkgs.runCommand "expressvpn-nix-lint"
+              {
+                nativeBuildInputs = [
+                  pkgs.deadnix
+                  pkgs.nixfmt
+                  pkgs.shellcheck
+                  pkgs.statix
+                ];
+              }
+              ''
+                cd ${self}
+                find . -name '*.nix' -exec nixfmt --check {} +
+                statix check .
+                deadnix --fail .
+                shellcheck scripts/*.sh
+                touch $out
+              '';
         }
         # The VM test needs KVM, which CI only has on x86_64.
         // lib.optionalAttrs pkgs.stdenv.hostPlatform.isx86_64 {
