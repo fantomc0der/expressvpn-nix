@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Points the package at a new ExpressVPN release: downloads the installer,
 # checks its signature against the vendor key kept in this repository, and
-# rewrites pkgs/expressvpn/source.json.
+# rewrites pkgs/expressvpn/source.json (and the version shown in README.md).
 #
 # Usage: scripts/update.sh [version]
 #
@@ -92,6 +92,9 @@ nix-store --add-fixed sha256 "$installer" >/dev/null
 
 jq -n --arg version "$version" --arg url "$url" --arg hash "$hash" \
   '{ version: $version, url: $url, hash: $hash }' >"$source_json"
+
+# Keep the version shown in the README in step.
+sed -i "s/^| App version | .* |\$/| App version | $version |/" "$repo/README.md"
 
 echo "updated $current -> $version"
 echo "next: nix flake check, then scripts/e2e-test.sh (see docs/updating.md)"
