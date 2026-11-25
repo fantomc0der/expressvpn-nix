@@ -107,11 +107,42 @@ expressvpnctl disconnect
 
 The app turns on **Profile > Launch ExpressVPN on Startup** by default. It writes `~/.config/autostart/expressvpn-client.desktop`, a standard XDG autostart entry.
 
-Desktop environments such as GNOME and KDE run those entries. Bare compositors such as Hyprland or Sway do not, unless you run an autostart tool (`dex -a`, or systemd's XDG autostart generator). There, start the app from the compositor's own config instead, for example:
+Desktop environments such as GNOME and KDE run those entries, so there the app starts at login with nothing more to do.
+
+Bare compositors such as Hyprland and Sway do not run them, unless you use an autostart tool (`dex -a`, or systemd's XDG autostart generator). There, start the app from the compositor's own configuration.
+
+### Hyprland
+
+With a Lua configuration:
+
+```lua
+hl.on("hyprland.start", function()
+    local entry = io.open(os.getenv("HOME") .. "/.config/autostart/expressvpn-client.desktop")
+    if entry then
+        entry:close()
+        hl.exec_cmd("expressvpn-client")
+    end
+end)
+```
+
+With a `hyprland.conf`:
 
 ```
-exec-once = expressvpn-client
+exec-once = test -f ~/.config/autostart/expressvpn-client.desktop && expressvpn-client
 ```
+
+Both start the app only while the autostart entry exists. The app creates the entry when **Launch ExpressVPN on Startup** is on and deletes it when the setting is off, so the setting in the app keeps working. To start the app regardless of the setting, run `expressvpn-client` unconditionally.
+
+The Lua form is the one in use on the machine this package was first installed on. The `hyprland.conf` form has not been run.
+
+### Changing the setting from a terminal
+
+```bash
+expressvpn-client --disable-launch-on-login   # removes the autostart entry
+expressvpn-client --enable-launch-on-login    # writes it again
+```
+
+These work whether or not the app is already running.
 
 ## Updating
 

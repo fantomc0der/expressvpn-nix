@@ -68,7 +68,14 @@ When the machine is offline, the daemon finishes its cleanup (firewall rules and
 
 ## The GUI does not start at login
 
-The app writes a standard XDG autostart entry, which bare compositors such as Hyprland and Sway do not run. See [installation.md](installation.md#starting-the-gui-at-login).
+The app writes a standard XDG autostart entry, which bare compositors such as Hyprland and Sway do not run. Add a line to the compositor's configuration instead; [installation.md](installation.md#starting-the-gui-at-login) has the lines for Hyprland.
+
+If you have added one and the app still does not start, check that the entry exists, because the examples start the app only while it does:
+
+```bash
+ls ~/.config/autostart/expressvpn-client.desktop
+expressvpn-client --enable-launch-on-login     # writes it if it is missing
+```
 
 ## The GUI window is blank or does not appear on Wayland
 
