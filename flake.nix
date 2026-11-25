@@ -54,7 +54,7 @@
                 find . -name '*.nix' -exec nixfmt --check {} +
                 statix check .
                 deadnix --fail .
-                shellcheck scripts/*.sh
+                shellcheck scripts/*.sh .claude/skills/*/scripts/*.sh
                 touch $out
               '';
         }

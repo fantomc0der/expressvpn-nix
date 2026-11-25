@@ -99,7 +99,13 @@ expressvpnctl --unstable dump daemon-state | jq '{ vpnSupportErrors, splitTunnel
 
 ### Trace what the daemon executes
 
-The daemon does not log the output of its helper processes. In a test VM, wrap it in `strace` to see exactly what it runs and what the helpers print:
+The daemon does not log the output of its helper processes. The quickest way to see it is the tracing VM that ships with the `debug-expressvpn` skill. It runs the daemon under `strace`, optionally logs in and connects, and writes summaries (programs not found, paths not found, each helper's output, network state) to a results directory:
+
+```bash
+.claude/skills/debug-expressvpn/scripts/trace-vm.sh --online <code-file> --protocol openvpnudp
+```
+
+To do the same by hand in a test VM, wrap the daemon in `strace`:
 
 ```nix
 systemd.services.expressvpn-service.serviceConfig.ExecStart = lib.mkForce
