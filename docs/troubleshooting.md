@@ -77,6 +77,25 @@ ls ~/.config/autostart/expressvpn-client.desktop
 expressvpn-client --enable-launch-on-login     # writes it if it is missing
 ```
 
+## No tray icon after logging in
+
+The app is running (opening it again from the launcher brings up its window) but there is no icon in the system tray.
+
+The app looks for a system tray once, when it starts. Started at login before the bar or shell that provides the tray, it finds none and never looks again. On the machine where this was found, the app had still not registered an icon three minutes after login; restarted with the tray running, it registered at once.
+
+To confirm, ask the tray what has registered with it:
+
+```bash
+busctl --user get-property org.kde.StatusNotifierWatcher /StatusNotifierWatcher \
+  org.kde.StatusNotifierWatcher RegisteredStatusNotifierItems
+```
+
+To get the icon back now, quit the app and start it again. Quitting the app disconnects the VPN unless background mode is on (`expressvpnctl background enable`).
+
+To fix it for good, make the login command wait for the tray. [installation.md](installation.md#hyprland) has the lines.
+
+If `busctl` reports that `org.kde.StatusNotifierWatcher` does not exist, nothing on the system provides a tray, and the app has nowhere to put an icon.
+
 ## The GUI window is blank or does not appear on Wayland
 
 The app uses X11 and needs XWayland. On Hyprland that is `programs.hyprland.xwayland.enable = true` (the default). If the window appears but stays blank, start the app with `expressvpn-client --safe-mode` to use software rendering.

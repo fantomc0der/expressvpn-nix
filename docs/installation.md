@@ -120,7 +120,9 @@ hl.on("hyprland.start", function()
     local entry = io.open(os.getenv("HOME") .. "/.config/autostart/expressvpn-client.desktop")
     if entry then
         entry:close()
-        hl.exec_cmd("expressvpn-client")
+        hl.exec_cmd("for i in $(seq 60); do"
+            .. " busctl --user status org.kde.StatusNotifierWatcher >/dev/null 2>&1 && break;"
+            .. " sleep 0.5; done; exec expressvpn-client")
     end
 end)
 ```
@@ -128,10 +130,13 @@ end)
 With a `hyprland.conf`:
 
 ```
-exec-once = test -f ~/.config/autostart/expressvpn-client.desktop && expressvpn-client
+exec-once = test -f ~/.config/autostart/expressvpn-client.desktop && { for i in $(seq 60); do busctl --user status org.kde.StatusNotifierWatcher >/dev/null 2>&1 && break; sleep 0.5; done; exec expressvpn-client; }
 ```
 
-Both start the app only while the autostart entry exists. The app creates the entry when **Launch ExpressVPN on Startup** is on and deletes it when the setting is off, so the setting in the app keeps working. To start the app regardless of the setting, run `expressvpn-client` unconditionally.
+Both do two things before starting the app:
+
+- **They check that the autostart entry exists.** The app creates the entry when **Launch ExpressVPN on Startup** is on and deletes it when the setting is off, so the setting in the app keeps working. Leave the check out to start the app regardless of the setting.
+- **They wait for the system tray**, for up to 30 seconds. The app looks for a tray only once, when it starts. If the bar or shell that provides the tray is not up yet, the app runs without a tray icon until it is restarted. Compositors start everything at once, so without the wait the app usually wins that race. Leave the wait out if you have no tray.
 
 The Lua form is the one in use on the machine this package was first installed on. The `hyprland.conf` form has not been run.
 
